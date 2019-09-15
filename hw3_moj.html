@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- This is a comment 
+      purpose: 
+      HW 3 CNIT 133A D3
+      student: CNIT 133A Irina Golovko
+        date: 09/16/2019 --> 
+  <title>D3 Homework</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Bar-chart of number of students per term.">
+  
+  <style>
+
+    h1 {
+      text-align: center;
+      font-family: sans-serif;
+      font-size: 2em;
+      text-decoration: none;
+      padding: 0;
+      margin: 5px 0px 20px;
+    }
+    #chart {
+      display: flex;
+      justify-content: center;
+    }
+    #chart rect {
+      fill: #4aaeea;
+    }
+    #chart text {
+      fill: black;
+      font: 10px sans-serif;
+      text-anchor: end;
+    }
+    .axis text {
+      font: 10px sans-serif;
+    }
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #fff;
+      shape-rendering: crispEdges;
+    }
+    body {
+      background-color: #1a1a1a;
+      color: #eaeaea;
+      padding: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Students per term</h1>
+  <div id="chart"></div>
+
+ <script src="https://d3js.org/d3.v5.min.js"></script>
+
+  <script>
+    //defining the margins, height, width,
+    //arrays for students and terms
+    const margin = 100;
+    const height = 500 - margin;
+    const width = 700 - margin;
+    const students = [];
+    const terms = [];
+
+
+    var tooltip = d3.select('body').append('div')
+      .style('position', 'absolute')
+      .style('padding', '5px')
+      .style('background', 'gray')
+      .style('opacity', 0);
+
+
+  //accessing data 'd' from json file  
+    d3.json("hw3data.json")
+      .then(function (d) {
+   
+      //loop through objects in json file and push their 
+      //values into arrays 'terms' and 'students'
+      for (i in d) {
+        students.push(d[i]['students']);
+        terms.push(d[i]['term']);
+      } 
+
+
+      //x and y scales for each bar
+      const yS = d3.scaleLinear()
+        .domain([0, d3.max(students)])
+        .range([0, height]);
+      const xS = d3.scaleBand()
+        .domain(terms)
+        .range([0, width])
+        .padding(0.2);
+      
+      const x = d3.scaleBand()
+        .domain(d3.range(0, students.length))
+        .range([0, width])
+        .padding(0.2);
+
+      //size and style for chart
+      const graph = d3.select('#chart')
+        .append('svg')
+        .attr('width', 700)
+        .attr('height', 500)
+        .style('background', "white")
+        .append('g')
+        .attr("transform", "translate(" + margin/2 + "," + margin/2 + ")");
+
+      //creating bars
+      graph.selectAll('rect')
+        .data(students)
+        .enter()
+        .append('rect')
+      
+        .attr('width', x.bandwidth)
+        .attr('height', function (d) {
+          return yS(d);
+        })
+        .attr('x', function (d, i) {
+          return x(i);
+        })
+        .attr('y', function (d) {
+          return height - yS(d)
+        })
+
+      //tooltip
+      .on('mouseover', function(d) {
+        tooltip.transition()
+          .style('opacity', 1)
+       
+        //tooltip.html(d)
+        tooltip.html("Students: " + d + "<br/>" + "Term: " + terms[i]
+        )
+         
+
+          .style('left', (d3.event.pageX - 35) + 'px')
+          .style('top', (d3.event.pageY - 30) + 'px')
+
+        d3.select(this)
+          .style('opacity', .6)
+      })
+      .on('mouseout', function(d) {
+        d3.select(this)
+          .style('opacity', 1)
+     });
+
+      var verticalGuide = d3.scaleLinear()
+        .domain([0, d3.max(students)])
+        .range([height, 0]);
+      
+      graph.append('g')
+        .call(d3.axisLeft(yS).scale(verticalGuide));
+      graph.append('g')
+        .call(d3.axisBottom(xS))
+        .attr('transform', 'translate(0, ' + height + ')');
+    })
+
+      .catch(function(error) {
+        console.log(error);
+      });
+  </script>
+</body>
+
+</html>
